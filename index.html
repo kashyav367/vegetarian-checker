@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vegetarian checker</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Is it Vegetarian?</h1>
+
+    <form>
+        <label for="barcode">Enter a UPC barcode number (12 digits)</label>
+        <input type="number" id="barcode" name="barcode">
+        <button type="button" onclick="getFetch()">Get Value</button>
+    </form>
+
+    <img id="product-img" src="" alt="Product Image">
+    <h2 id="product-name"></h2>
+    <table id="ingredient-table">
+        <tr>
+            <th>Ingredient</th>
+            <th>Vegetarian?</th>
+        </tr>
+    </table>
+
+    <script src="main.js"></script>
+</body>
+</html>
