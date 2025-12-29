@@ -1,65 +1,77 @@
-function getFetch(){
-  let inputVal = document.getElementById("barcode").value;
-  console.log(inputVal.length)
-  if (inputVal.length !== 12) {
-      alert(`Please ensure that barcode length is 12 characters.`)
-      return;
+function getFetch() {
+  const inputVal = document.getElementById("barcode").value.trim();
+
+  // Validation
+  if (!/^\d{12}$/.test(inputVal)) {
+    alert("Please enter a valid 12-digit UPC barcode.");
+    return;
   }
-  const url = `https://world.openfoodfacts.org/api/v0/product/${inputVal}.json`
+
+  const url = `https://world.openfoodfacts.org/api/v0/product/${inputVal}.json`;
 
   fetch(url)
-      .then(res => res.json()) // parse response as JSON
-      .then(data => {
-          console.log(data)
+    .then(res => res.json())
+    .then(data => {
       if (data.status === 1) {
-          const item = new ProductInfo(data.product)
-          item.showInfo()
-          item.listIngredients()
-          item.clearAll()
-      } else if (data.status === 0) {
-          alert(`Product ${inputVal} not found. Please try another.`)
+        const item = new ProductInfo(data.product);
+        item.showInfo();
+        item.listIngredients();
+      } else {
+        alert(`Product not found. Try another UPC.`);
       }
-      })
-      .catch(err => {
-          console.log(`error ${err}`)
-      });
+    })
+    .catch(err => {
+      console.error("Error:", err);
+      alert("Something went wrong. Please try again.");
+    });
 }
 
 class ProductInfo {
   constructor(productData) {
-      this.brand = productData.brands
-      this.name = productData.product_name
-      this.ingredients = productData.ingredients
-      this.image = productData.image_url
+    this.name = productData.product_name || "Unknown Product";
+    this.image = productData.image_url || "";
+    this.ingredients = productData.ingredients || [];
   }
 
   showInfo() {
-      console.log(this.ingredients)
-      document.getElementById("product-img").src = this.image;
-      document.getElementById("product-name").innerHTML = `${this.name}`;
+    document.getElementById("product-img").src = this.image;
+    document.getElementById("product-name").innerText = this.name;
   }
 
   listIngredients() {
-      let tableRef = document.getElementById('ingredient-table');
-      for(var i = 1;i<tableRef.rows.length;) {
-          tableRef.deleteRow(i);
+    const tableRef = document.getElementById("ingredient-table");
+
+    // Clear old rows
+    while (tableRef.rows.length > 1) {
+      tableRef.deleteRow(1);
+    }
+
+    if (this.ingredients.length === 0) {
+      const row = tableRef.insertRow();
+      row.insertCell(0).innerText = "No ingredient data";
+      row.insertCell(1).innerText = "Unknown";
+      return;
+    }
+
+    this.ingredients.forEach(item => {
+      const row = tableRef.insertRow();
+      const ingredientCell = row.insertCell(0);
+      const vegCell = row.insertCell(1);
+
+      ingredientCell.innerText = item.text || "Unknown";
+
+      const vegStatus = item.vegetarian ?? "unknown";
+      vegCell.innerText = vegStatus;
+
+      if (vegStatus === "no") {
+        vegCell.style.color = "red";
+        vegCell.style.fontWeight = "bold";
+      } else if (vegStatus === "yes") {
+        vegCell.style.color = "green";
+        vegCell.style.fontWeight = "bold";
+      } else {
+        vegCell.style.color = "orange";
       }
-      if (!(this.ingredients == null)) {
-          for(var key in this.ingredients) {
-              let newRow = tableRef.insertRow(-1);
-              let newICell = newRow.insertCell(0);
-              let newVCell = newRow.insertCell(1);
-              let newIText = document.createTextNode(this.ingredients[key].text);
-              let vegStatus = this.ingredients[key].vegetarian == null ? 'unknown' : this.ingredients[key].vegetarian
-              let newVText = document.createTextNode(vegStatus);
-              newICell.appendChild(newIText);
-              newVCell.appendChild(newVText);
-              if (vegStatus === 'no') {
-                  newVCell.classList.add('non-veg-item')
-              } else if (vegStatus === 'unknown' || vegStatus === 'maybe') {
-                  newVCell.classList.add('unknown-item')
-              }
-          }
-      } 
+    });
   }
 }
